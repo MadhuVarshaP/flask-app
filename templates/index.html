@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Freshness Detection</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f0f4f8;
+      color: #333;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .header {
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      color: #1d4ed8;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      font-size: 1.2rem;
+      font-style: italic;
+      color: #555;
+    }
+
+    .upload-section {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      margin-top: 20px;
+    }
+
+    .upload-section input {
+      display: block;
+      width: 100%;
+      margin-top: 10px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    .button-primary {
+      background-color: #22c55e;
+      color: white;
+    }
+
+    .button-primary:hover {
+      background-color: #16a34a;
+    }
+
+    .button-secondary {
+      background-color: #3b82f6;
+      color: white;
+    }
+
+    .button-secondary:hover {
+      background-color: #2563eb;
+    }
+
+    .loading {
+      margin-top: 10px;
+      color: #888;
+      font-size: 1rem;
+    }
+
+    .results {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      margin-top: 20px;
+    }
+
+    .results h2 {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+    }
+
+    .results ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .results ul li {
+      font-size: 1rem;
+      margin-bottom: 5px;
+    }
+
+    .features {
+      margin-top: 40px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .feature {
+      background: linear-gradient(to top right, #d9f99d, #6ee7b7);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      transition: transform 0.3s;
+    }
+
+    .feature:hover {
+      transform: scale(1.05);
+    }
+
+    .feature h3 {
+      font-size: 1.25rem;
+      margin-bottom: 10px;
+      color: #374151;
+    }
+
+    .feature p {
+      font-size: 0.9rem;
+      color: #4b5563;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header Section -->
+    <div class="header">
+      <h1>Freshness Detection</h1>
+      <p>"Ensure the quality of your real-world objects with our AI-powered freshness detection tool."</p>
+    </div>
+
+    <!-- Image Upload Section -->
+    <div class="upload-section">
+      <label for="image-upload">Upload an Image</label>
+      <input type="file" id="image-upload" />
+      <p id="selected-file" style="margin-top: 10px; color: #555;"></p>
+    </div>
+
+    <!-- Submit Button -->
+    <button id="analyze-button" class="button button-primary">Analyze Freshness</button>
+
+    <!-- Results Section -->
+    <div id="results" class="results" style="display: none;">
+      <h2>Detection Results</h2>
+      <ul id="results-list"></ul>
+    </div>
+
+    <!-- Download Button -->
+    <button id="download-button" class="button button-secondary" style="display: none;">Download Excel File</button>
+
+    <!-- Features Section -->
+    <div class="features">
+      <div class="feature">
+        <h3>Real-Time Detection</h3>
+        <p>Analyze object quality instantly with cutting-edge AI models.</p>
+      </div>
+      <div class="feature">
+        <h3>User-Friendly</h3>
+        <p>Easy-to-use interface designed for everyone, from farmers to consumers.</p>
+      </div>
+      <div class="feature">
+        <h3>Accurate Insights</h3>
+        <p>Gain reliable insights into the freshness and quality of your produce.</p>
+      </div>
+      <div class="feature">
+        <h3>Save Resources</h3>
+        <p>Reduce waste by detecting freshness and making informed decisions.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const imageInput = document.getElementById("image-upload");
+    const analyzeButton = document.getElementById("analyze-button");
+    const downloadButton = document.getElementById("download-button");
+    const resultsDiv = document.getElementById("results");
+    const resultsList = document.getElementById("results-list");
+    const selectedFileText = document.getElementById("selected-file");
+
+    let imageFile = null;
+
+    imageInput.addEventListener("change", (e) => {
+      imageFile = e.target.files[0];
+      resultsDiv.style.display = "none";
+      downloadButton.style.display = "none";
+      if (imageFile) {
+        selectedFileText.textContent = `Selected File: ${imageFile.name}`;
+      } else {
+        selectedFileText.textContent = "";
+      }
+    });
+
+    analyzeButton.addEventListener("click", async () => {
+      if (!imageFile) {
+        alert("Please upload an image first.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("image", imageFile);
+
+      try {
+        const response = await fetch("http://localhost:5000/detect-freshness", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          alert("Failed to process the image. Please try again.");
+          return;
+        }
+
+        const data = await response.json();
+        resultsList.innerHTML = "";
+
+        if (data.detections) {
+          data.detections.forEach((detection) => {
+            const listItem = document.createElement("li");
+            listItem.textContent = `${detection.product} (${detection.freshness}) - Confidence: ${detection.confidence.toFixed(2)}`;
+            resultsList.appendChild(listItem);
+          });
+          resultsDiv.style.display = "block";
+          downloadButton.style.display = "inline-block";
+        } else {
+          alert("No detections found in the response.");
+        }
+      } catch (error) {
+        alert("Failed to process the image. Please try again.");
+      }
+    });
+
+    downloadButton.addEventListener("click", async () => {
+      try {
+        const response = await fetch("http://localhost:5000/download-excel", {
+          method: "GET",
+        });
+
+        if (!response.ok) {
+          alert("Failed to download the file. Please try again.");
+          return;
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "detection_fresh_count.xlsx";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (error) {
+        alert("Failed to download the file. Please try again.");
+      }
+    });
+  </script>
+</body>
+</html>
