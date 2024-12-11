@@ -1,4 +1,3 @@
-
 from flask import Flask, request, jsonify, render_template, send_file
 from flask_cors import CORS
 import cv2
@@ -10,9 +9,9 @@ import os
 app = Flask(__name__)
 CORS(app)
 
+# Load the YOLO model
 model_path = 'models/Freshnew100.pt'  # Path to your .pt model file
 model = YOLO(model_path)  # Load the YOLO model
-
 
 # Define label mapping
 label_encoder = ['apple_fresh', 'apple_stale', 'onion_fresh', 'onion_stale', 
@@ -60,7 +59,6 @@ def update_fresh_count(product, is_fresh):
 def home():
     return render_template('index.html')
 
-
 # Route for handling freshness detection
 @app.route('/detect-freshness', methods=['POST'])
 def detect_freshness():
@@ -70,40 +68,36 @@ def detect_freshness():
 
         image_file = request.files['image']
         uploads_dir = "uploads"
-        os.makedirs(uploads_dir, exist_ok=True)  # Ensure the directory exists
+        os.makedirs(uploads_dir, exist_ok=True)
         image_path = os.path.join(uploads_dir, image_file.filename)
-
-        # Save the image temporarily
         image_file.save(image_path)
-
-        # Process the image using YOLO
         image = cv2.imread(image_path)
         if image is None:
             return jsonify({"error": "Error reading image"}), 400
 
+        # Use YOLOv5 for object detection
         results = model(image)
         detection_results = []
 
+        # YOLOv5 returns a result in a list of detections
         for result in results:
-            boxes = result.boxes.xyxy  # Bounding box coordinates
-            confidences = result.boxes.conf  # Confidence scores
-            labels = result.boxes.cls  # Class indices
+            boxes = result.boxes.xyxy.cpu().numpy()  # Bounding box coordinates (x1, y1, x2, y2)
+            confidences = result.boxes.conf.cpu().numpy()  # Confidence scores for each box
+            labels = result.boxes.cls.cpu().numpy()  # Class indices
 
             for i, box in enumerate(boxes):
-                confidence = confidences[i].item()
+                confidence = confidences[i]
                 if confidence < CONFIDENCE_THRESHOLD:
-                    continue  # Skip low-confidence predictions
+                    continue
 
                 x1, y1, x2, y2 = map(int, box)
                 label_idx = int(labels[i])
                 predicted_label = label_encoder[label_idx]
                 product, freshness = predicted_label.split('_')
-
-                # Update fresh count in Excel
                 is_fresh = (freshness == "fresh")
+
                 update_fresh_count(product, is_fresh)
 
-                # Append result for the frontend
                 detection_results.append({
                     "product": product,
                     "freshness": freshness,
@@ -111,26 +105,18 @@ def detect_freshness():
                     "bbox": [x1, y1, x2, y2]
                 })
 
-        # Save the workbook
-        workbook.save(excel_file)
-
-        return jsonify({
-            "status": "Freshness detection completed",
-            "detections": detection_results
-        })
-
+        workbook.save(excel_file)  # Save workbook after updating fresh count
+        return jsonify({"status": "Freshness detection completed", "detections": detection_results})
     except Exception as e:
         print(f"Error in detect_freshness route: {e}")
         return jsonify({"error": str(e)}), 500
 
+# Route for downloading the Excel file
 @app.route('/download-excel', methods=['GET'])
 def download_excel():
     try:
-        # Ensure the Excel file exists
         if not os.path.exists(excel_file):
             return jsonify({"error": "Excel file not found"}), 404
-
-        # Return the Excel file as a downloadable response
         return send_file(excel_file, as_attachment=True, download_name="detection_fresh_count.xlsx")
     except Exception as e:
         print(f"Error in download_excel route: {e}")
