@@ -1,0 +1,8 @@
+Flask
+flask-cors
+opencv-python
+ultralytics
+openpyxl
+torch
+torchvision
+numpy
