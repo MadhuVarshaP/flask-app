@@ -1,8 +1,8 @@
-Flask
-flask-cors
-opencv-python
-ultralytics
-openpyxl
-numpy
+Flask==2.2.5
+flask-cors==3.0.10
+opencv-python-headless==4.8.1.78  
+ultralytics==8.0.138  
+openpyxl==3.1.2
+numpy==1.24.3  
 torch==2.0.1+cpu
-torchvision==0.15.2+cpu
+torchvision==0.15.2+cpu 
