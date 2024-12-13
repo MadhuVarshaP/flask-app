@@ -221,7 +221,7 @@
       formData.append("image", imageFile);
 
       try {
-        const response = await fetch("http://localhost:5000/detect-freshness", {
+        const response = await fetch("http://3.106.238.17/detect-freshness", {
           method: "POST",
           body: formData,
         });
@@ -252,7 +252,7 @@
 
     downloadButton.addEventListener("click", async () => {
       try {
-        const response = await fetch("http://localhost:5000/download-excel", {
+        const response = await fetch("http://3.106.238.17/download-excel", {
           method: "GET",
         });
 
